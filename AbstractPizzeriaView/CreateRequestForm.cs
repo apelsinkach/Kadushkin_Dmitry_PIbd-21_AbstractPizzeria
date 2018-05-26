@@ -25,41 +25,30 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                var responseC = APIClient.GetRequest("api/Customer/GetList");
-                if (responseC.Result.IsSuccessStatusCode)
+                List<CustomerViewModel> listC = Task.Run(() => APIClient.GetRequestData<List<CustomerViewModel>>("api/Customer/GetList")).Result;
+                if (listC != null)
                 {
-                    List<CustomerViewModel> list = APIClient.GetElement<List<CustomerViewModel>>(responseC);
-                    if (list != null)
-                    {
-                        comboBoxCustomer.DisplayMember = "CustomerFIO";
-                        comboBoxCustomer.ValueMember = "Id";
-                        comboBoxCustomer.DataSource = list;
-                        comboBoxCustomer.SelectedItem = null;
-                    }
+                    comboBoxCustomer.DisplayMember = "CustomerFIO";
+                    comboBoxCustomer.ValueMember = "Id";
+                    comboBoxCustomer.DataSource = listC;
+                    comboBoxCustomer.SelectedItem = null;
                 }
-                else
+
+                List<ArticleViewModel> listP = Task.Run(() => APIClient.GetRequestData<List<ArticleViewModel>>("api/Article/GetList")).Result;
+                if (listP != null)
                 {
-                    throw new Exception(APIClient.GetError(responseC));
-                }
-                var responseP = APIClient.GetRequest("api/Article/GetList");
-                if (responseP.Result.IsSuccessStatusCode)
-                {
-                    List<ArticleViewModel> list = APIClient.GetElement<List<ArticleViewModel>>(responseP);
-                    if (list != null)
-                    {
-                        comboBoxArticle.DisplayMember = "ArticleName";
-                        comboBoxArticle.ValueMember = "Id";
-                        comboBoxArticle.DataSource = list;
-                        comboBoxArticle.SelectedItem = null;
-                    }
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(responseP));
+                    comboBoxArticle.DisplayMember = "ArticleName";
+                    comboBoxArticle.ValueMember = "Id";
+                    comboBoxArticle.DataSource = listP;
+                    comboBoxArticle.SelectedItem = null;
                 }
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -71,20 +60,16 @@ namespace AbstractPizzeriaView
                 try
                 {
                     int id = Convert.ToInt32(comboBoxArticle.SelectedValue);
-                    var responseP = APIClient.GetRequest("api/Article/Get/" + id);
-                    if (responseP.Result.IsSuccessStatusCode)
-                    {
-                        ArticleViewModel product = APIClient.GetElement<ArticleViewModel>(responseP);
-                        int count = Convert.ToInt32(textBoxCount.Text);
-                        textBoxSum.Text = (count * (int)product.Price).ToString();
-                    }
-                    else
-                    {
-                        throw new Exception(APIClient.GetError(responseP));
-                    }
+                    ArticleViewModel product = Task.Run(() => APIClient.GetRequestData<ArticleViewModel>("api/Article/Get/" + id)).Result;
+                    int count = Convert.ToInt32(textBoxCount.Text);
+                    textBoxSum.Text = (count * (int)product.Price).ToString();
                 }
                 catch (Exception ex)
                 {
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -122,35 +107,35 @@ namespace AbstractPizzeriaView
                 MessageBox.Show("Выберите изделие", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            try
+            int clientId = Convert.ToInt32(comboBoxCustomer.SelectedValue);
+            int productId = Convert.ToInt32(comboBoxArticle.SelectedValue);
+            int count = Convert.ToInt32(textBoxCount.Text);
+            int sum = Convert.ToInt32(textBoxSum.Text);
+            Task task = Task.Run(() => APIClient.PostRequestData("api/Basic/CreateOrder", new RequestBindingModel
             {
-                var response = APIClient.PostRequest("api/Basic/CreateOrder", new RequestBindingModel
-                {
-                    CustomerId = Convert.ToInt32(comboBoxCustomer.SelectedValue),
-                    ArticleId = Convert.ToInt32(comboBoxArticle.SelectedValue),
-                    Count = Convert.ToInt32(textBoxCount.Text),
-                    Sum = Convert.ToInt32(textBoxSum.Text)
-                });
-                if (response.Result.IsSuccessStatusCode)
-                {
-                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
-            }
-            catch (Exception ex)
+                CustomerId = clientId,
+                ArticleId = productId,
+                Count = count,
+                Sum = sum
+            }));
+
+            task.ContinueWith((prevTask) => MessageBox.Show("Сохранение прошло успешно. Обновите список", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                TaskContinuationOptions.OnlyOnRanToCompletion);
+            task.ContinueWith((prevTask) =>
             {
+                var ex = (Exception)prevTask.Exception;
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+
+            Close();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.Cancel;
             Close();
         }
     }
