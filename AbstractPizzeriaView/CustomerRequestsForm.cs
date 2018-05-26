@@ -1,5 +1,6 @@
 ﻿using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
+using AbstractPizzeriaService.ViewModels;
 using Microsoft.Reporting.WinForms;
 using System;
 using System.Collections.Generic;
@@ -10,23 +11,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
-
 namespace AbstractPizzeriaView
 {
     public partial class CustomerRequestsForm : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IStatementService service;
-
-
-        public CustomerRequestsForm(IStatementService service)
+        public CustomerRequestsForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void CustomerRequestsForm_Load(object sender, EventArgs e)
@@ -43,18 +34,26 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                ReportParameter parameter = new ReportParameter("ReportParameterPeriod",
+                ReportParameter parameter = new ReportParameter("StatementParameterPeriod",
                                             "c " + dateTimePickerFrom.Value.ToShortDateString() +
                                             " по " + dateTimePickerTo.Value.ToShortDateString());
                 reportViewer.LocalReport.SetParameters(parameter);
 
-                var dataSource = service.GetClientOrders(new StatementBindingModel
+                var response = APIClient.PostRequest("api/Statement/GetCustomerRequests", new StatementBindingModel
                 {
                     DateFrom = dateTimePickerFrom.Value,
                     DateTo = dateTimePickerTo.Value
                 });
-                ReportDataSource source = new ReportDataSource("DataSetRequests", dataSource);
-                reportViewer.LocalReport.DataSources.Add(source);
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    var dataSource = APIClient.GetElement<List<CustomerRequestsModel>>(response);
+                    ReportDataSource source = new ReportDataSource("DataSetOrders", dataSource);
+                    reportViewer.LocalReport.DataSources.Add(source);
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
 
                 reportViewer.RefreshReport();
             }
@@ -79,13 +78,20 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    service.SaveClientOrders(new StatementBindingModel
+                    var response = APIClient.PostRequest("api/Report/SaveClientOrders", new StatementBindingModel
                     {
                         FileName = sfd.FileName,
                         DateFrom = dateTimePickerFrom.Value,
                         DateTo = dateTimePickerTo.Value
                     });
-                    MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {

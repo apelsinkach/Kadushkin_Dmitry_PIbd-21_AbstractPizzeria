@@ -7,30 +7,22 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class ResourceForm : Form
     {
-
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IResourceService service;
 
         private int? id;
 
-        public ResourceForm(IResourceService service)
+        public ResourceForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void ResourceForm_Load(object sender, EventArgs e)
@@ -39,15 +31,20 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    ResourceViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Resource/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.ResourceName;
-                        dataGridView.DataSource = view.ResourceIngridients;
+                        var stock = APIClient.GetElement<ResourceViewModel>(response);
+                        textBoxName.Text = stock.ResourceName;
+                        dataGridView.DataSource = stock.ResourceIngridients;
                         dataGridView.Columns[0].Visible = false;
                         dataGridView.Columns[1].Visible = false;
                         dataGridView.Columns[2].Visible = false;
                         dataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -66,9 +63,10 @@ namespace AbstractPizzeriaView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new ResourceBindingModel
+                    response = APIClient.PostRequest("api/Resource/UpdElement", new ResourceBindingModel
                     {
                         Id = id.Value,
                         ResourceName = textBoxName.Text
@@ -76,14 +74,21 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new ResourceBindingModel
+                    response = APIClient.PostRequest("api/Resource/AddElement", new ResourceBindingModel
                     {
                         ResourceName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

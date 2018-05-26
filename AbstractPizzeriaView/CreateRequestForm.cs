@@ -10,50 +10,52 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class CreateRequestForm : Form
     {
 
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly ICustomerService serviceC;
-
-        private readonly IArticleService serviceP;
-
-        private readonly IBasicService serviceM;
-
-        public CreateRequestForm(ICustomerService serviceC, IArticleService serviceP, IBasicService serviceM)
+        public CreateRequestForm()
         {
             InitializeComponent();
-            this.serviceC = serviceC;
-            this.serviceP = serviceP;
-            this.serviceM = serviceM;
         }
 
         private void CreateRequestForm_Load(object sender, EventArgs e)
         {
             try
             {
-                List<CustomerViewModel> listC = serviceC.GetList();
-                if (listC != null)
+                var responseC = APIClient.GetRequest("api/Customer/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxCustomer.DisplayMember = "CustomerFIO";
-                    comboBoxCustomer.ValueMember = "Id";
-                    comboBoxCustomer.DataSource = listC;
-                    comboBoxCustomer.SelectedItem = null;
+                    List<CustomerViewModel> list = APIClient.GetElement<List<CustomerViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxCustomer.DisplayMember = "CustomerFIO";
+                        comboBoxCustomer.ValueMember = "Id";
+                        comboBoxCustomer.DataSource = list;
+                        comboBoxCustomer.SelectedItem = null;
+                    }
                 }
-                List<ArticleViewModel> listP = serviceP.GetList();
-                if (listP != null)
+                else
                 {
-                    comboBoxArticle.DisplayMember = "ArticleName";
-                    comboBoxArticle.ValueMember = "Id";
-                    comboBoxArticle.DataSource = listP;
-                    comboBoxArticle.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
+                }
+                var responseP = APIClient.GetRequest("api/Article/GetList");
+                if (responseP.Result.IsSuccessStatusCode)
+                {
+                    List<ArticleViewModel> list = APIClient.GetElement<List<ArticleViewModel>>(responseP);
+                    if (list != null)
+                    {
+                        comboBoxArticle.DisplayMember = "ArticleName";
+                        comboBoxArticle.ValueMember = "Id";
+                        comboBoxArticle.DataSource = list;
+                        comboBoxArticle.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseP));
                 }
             }
             catch (Exception ex)
@@ -69,9 +71,17 @@ namespace AbstractPizzeriaView
                 try
                 {
                     int id = Convert.ToInt32(comboBoxArticle.SelectedValue);
-                    ArticleViewModel product = serviceP.GetElement(id);
-                    int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * product.Price).ToString();
+                    var responseP = APIClient.GetRequest("api/Article/Get/" + id);
+                    if (responseP.Result.IsSuccessStatusCode)
+                    {
+                        ArticleViewModel product = APIClient.GetElement<ArticleViewModel>(responseP);
+                        int count = Convert.ToInt32(textBoxCount.Text);
+                        textBoxSum.Text = (count * (int)product.Price).ToString();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(responseP));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -114,16 +124,23 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                serviceM.CreateOrder(new RequestBindingModel
+                var response = APIClient.PostRequest("api/Basic/CreateOrder", new RequestBindingModel
                 {
                     CustomerId = Convert.ToInt32(comboBoxCustomer.SelectedValue),
                     ArticleId = Convert.ToInt32(comboBoxArticle.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text),
                     Sum = Convert.ToInt32(textBoxSum.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
