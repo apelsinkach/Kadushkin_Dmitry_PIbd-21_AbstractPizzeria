@@ -9,39 +9,35 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class ArticleIngridientForm : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public ArticleIngridientViewModel Model { set { model = value; } get { return model; } }
-
-        private readonly IIngridientService service;
 
         private ArticleIngridientViewModel model;
 
-        public ArticleIngridientForm(IIngridientService service)
+        public ArticleIngridientForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void ArticleIngridientForm_Load(object sender, EventArgs e)
         {
             try
             {
-                List<IngridientViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Ingridient/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
                     comboBoxIngridient.DisplayMember = "IngridientName";
                     comboBoxIngridient.ValueMember = "Id";
-                    comboBoxIngridient.DataSource = list;
+                    comboBoxIngridient.DataSource = APIClient.GetElement<List<IngridientViewModel>>(response);
                     comboBoxIngridient.SelectedItem = null;
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
