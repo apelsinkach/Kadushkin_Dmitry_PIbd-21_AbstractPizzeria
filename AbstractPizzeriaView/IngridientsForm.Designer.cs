@@ -96,7 +96,7 @@
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.dataGridView);
             this.Name = "IngridientsForm";
-            this.Text = "IngridientsForm";
+            this.Text = "Ингридиенты";
             this.Load += new System.EventHandler(this.IngridientsForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);

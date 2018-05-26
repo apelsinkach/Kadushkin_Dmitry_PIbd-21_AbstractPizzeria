@@ -122,7 +122,7 @@
             this.Controls.Add(this.comboBoxResource);
             this.Controls.Add(this.comboBoxIngridient);
             this.Name = "PutOnResource";
-            this.Text = "PutOnResource";
+            this.Text = "Добавление на склад";
             this.Load += new System.EventHandler(this.PutOnResource_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

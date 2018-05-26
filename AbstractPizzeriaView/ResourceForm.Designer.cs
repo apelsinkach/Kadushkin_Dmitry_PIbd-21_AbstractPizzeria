@@ -92,7 +92,7 @@
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.dataGridView);
             this.Name = "ResourceForm";
-            this.Text = "ResourceForm";
+            this.Text = "Склад";
             this.Load += new System.EventHandler(this.ResourceForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
