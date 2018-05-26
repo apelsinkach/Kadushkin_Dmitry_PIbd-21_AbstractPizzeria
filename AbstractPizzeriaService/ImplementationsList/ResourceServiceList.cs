@@ -1,18 +1,15 @@
 ﻿using AbstractPizzeria;
+using AbstractPizzeriaService;
 using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Resources;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AbstractPizzeriaService.ImplementationsList
+namespace AbstractShopService.ImplementationsList
 {
-   public class ResourceServiceList : IResourceService
+    public class ResourceServiceList : IResourceService
     {
         private ListDataSingleton source;
 
@@ -23,100 +20,62 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public List<ResourceViewModel> GetList()
         {
-            List<ResourceViewModel> result = new List<ResourceViewModel>();
-            for (int i = 0; i < source.Resources.Count; ++i)
-            {
-                // требуется дополнительно получить список компонентов на складе и их количество
-                List<ResourceIngridientViewModel> ResourceIngridients = new List<ResourceIngridientViewModel>();
-                for (int j = 0; j < source.ResourceIngridients.Count; ++j)
+            List<ResourceViewModel> result = source.Resources
+                .Select(rec => new ResourceViewModel
                 {
-                    if (source.ResourceIngridients[j].ResourceId == source.Resources[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Ingridients.Count; ++k)
-                        {
-                            if (source.ArticleIngridients[j].IngridientId == source.Ingridients[k].Id)
+                    Id = rec.Id,
+                    ResourceName = rec.ResourceName,
+                    ResourceIngridients = source.ResourceIngridients
+                            .Where(recPC => recPC.ResourceId == rec.Id)
+                            .Select(recPC => new ResourceIngridientViewModel
                             {
-                                componentName = source.Ingridients[k].IngridientName;
-                                break;
-                            }
-                        }
-                        ResourceIngridients.Add(new ResourceIngridientViewModel
-                        {
-                            Id = source.ResourceIngridients[j].Id,
-                            ResourceId = source.ResourceIngridients[j].ResourceId,
-                            IngridientId = source.ResourceIngridients[j].IngridientId,
-                            IngridientName = componentName,
-                            Count = source.ResourceIngridients[j].Count
-                        });
-                    }
-                }
-                result.Add(new ResourceViewModel
-                {
-                    Id = source.Resources[i].Id,
-                    ResourceName = source.Resources[i].ResourceName,
-                    ResourceIngridients = ResourceIngridients
-                });
-            }
+                                Id = recPC.Id,
+                                ResourceId = recPC.ResourceId,
+                                IngridientId = recPC.IngridientId,
+                                IngridientName = source.Ingridients
+                                    .FirstOrDefault(recC => recC.Id == recPC.IngridientId)?.IngridientName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public ResourceViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Resources.Count; ++i)
+            Resource element = source.Resources.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                // требуется дополнительно получить список компонентов на складе и их количество
-                List<ResourceIngridientViewModel> ResourceIngridients = new List<ResourceIngridientViewModel>();
-                for (int j = 0; j < source.ResourceIngridients.Count; ++j)
+                return new ResourceViewModel
                 {
-                    if (source.ResourceIngridients[j].ResourceId == source.Resources[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Ingridients.Count; ++k)
-                        {
-                            if (source.ArticleIngridients[j].IngridientId == source.Ingridients[k].Id)
+                    Id = element.Id,
+                    ResourceName = element.ResourceName,
+                    ResourceIngridients = source.ResourceIngridients
+                            .Where(recPC => recPC.ResourceId == element.Id)
+                            .Select(recPC => new ResourceIngridientViewModel
                             {
-                                componentName = source.Ingridients[k].IngridientName;
-                                break;
-                            }
-                        }
-                        ResourceIngridients.Add(new ResourceIngridientViewModel
-                        {
-                            Id = source.ResourceIngridients[j].Id,
-                            ResourceId = source.ResourceIngridients[j].ResourceId,
-                            IngridientId = source.ResourceIngridients[j].IngridientId,
-                            IngridientName = componentName,
-                            Count = source.ResourceIngridients[j].Count
-                        });
-                    }
-                }
-                if (source.Resources[i].Id == id)
-                {
-                    return new ResourceViewModel
-                    {
-                        Id = source.Resources[i].Id,
-                        ResourceName = source.Resources[i].ResourceName,
-                        ResourceIngridients = ResourceIngridients
-                    };
-                }
+                                Id = recPC.Id,
+                                ResourceId = recPC.ResourceId,
+                                IngridientId = recPC.IngridientId,
+                                IngridientName = source.Ingridients
+                                    .FirstOrDefault(recC => recC.Id == recPC.IngridientId)?.IngridientName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(ResourceBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Resources.Count; ++i)
+            Resource element = source.Resources.FirstOrDefault(rec => rec.ResourceName == model.ResourceName);
+            if (element != null)
             {
-                if (source.Resources[i].Id > maxId)
-                {
-                    maxId = source.Resources[i].Id;
-                }
-                if (source.Resources[i].ResourceName == model.ResourceName)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
+            int maxId = source.Resources.Count > 0 ? source.Resources.Max(rec => rec.Id) : 0;
             source.Resources.Add(new Resource
             {
                 Id = maxId + 1,
@@ -126,45 +85,33 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public void UpdElement(ResourceBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Resources.Count; ++i)
+            Resource element = source.Resources.FirstOrDefault(rec =>
+                                        rec.ResourceName == model.ResourceName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Resources[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Resources[i].ResourceName == model.ResourceName &&
-                    source.Resources[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
-            if (index == -1)
+            element = source.Resources.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Resources[index].ResourceName = model.ResourceName;
+            element.ResourceName = model.ResourceName;
         }
 
         public void DelElement(int id)
         {
-            // при удалении удаляем все записи о компонентах на удаляемом складе
-            for (int i = 0; i < source.ResourceIngridients.Count; ++i)
+            Resource element = source.Resources.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.ResourceIngridients[i].ResourceId == id)
-                {
-                    source.ResourceIngridients.RemoveAt(i--);
-                }
+                // при удалении удаляем все записи о компонентах на удаляемом складе
+                source.ResourceIngridients.RemoveAll(rec => rec.ResourceId == id);
+                source.Resources.Remove(element);
             }
-            for (int i = 0; i < source.Resources.Count; ++i)
+            else
             {
-                if (source.Resources[i].Id == id)
-                {
-                    source.Resources.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
     }
 }
