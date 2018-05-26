@@ -1,10 +1,8 @@
-﻿using AbstractPizzeriaService;
-using AbstractPizzeriaService.ImplementationsBD;
+﻿using AbstractPizzeriaService.ImplementationsBD;
 using AbstractPizzeriaService.Interfaces;
 using AbstractShopService.ImplementationsList;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -31,14 +29,13 @@ namespace AbstractPizzeriaView
         public static IUnityContainer BuildUnityContainer()
         {
             var currentContainer = new UnityContainer();
-            currentContainer.RegisterType<DbContext, AbstractDbContext>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<ICustomerService, CustomerServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IIngridientService, IngridientServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IWorkerService, WorkerServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IArticleService, ArticleServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IResourceService, ResourceServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IBasicService, BasicServiceBD>(new HierarchicalLifetimeManager());
-
+            currentContainer.RegisterType<IStatementService, StatementServiceBD>(new HierarchicalLifetimeManager());
             return currentContainer;
         }
 
