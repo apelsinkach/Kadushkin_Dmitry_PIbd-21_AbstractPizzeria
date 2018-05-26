@@ -1,4 +1,5 @@
-﻿using AbstractPizzeriaService.BindingModels;
+﻿using AbstractPizzeriaRestApi.Services;
+using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -57,6 +58,18 @@ namespace AbstractPizzeriaRestApi.Controllers
         public void PutComponentOnStock(ResourceIngridientBindingModel model)
         {
             _service.PutComponentOnStock(model);
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetInfo()
+        {
+            ReflectionService service = new ReflectionService();
+            var list = service.GetInfoByAssembly();
+            if (list == null)
+            {
+                InternalServerError(new Exception("Нет данных"));
+            }
+            return Ok(list);
         }
     }
 }
