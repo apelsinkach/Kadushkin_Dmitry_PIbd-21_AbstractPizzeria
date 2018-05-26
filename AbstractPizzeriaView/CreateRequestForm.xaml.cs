@@ -51,7 +51,7 @@ namespace AbstractPizzeriaView
                     int id = Convert.ToInt32(comboBoxArticle.SelectedValue);
                     ArticleViewModel product = serviceP.GetElement(id);
                     int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * product.Price).ToString();
+                    textBoxSum.Text = (count * (int) product.Price).ToString();
                 }
                 catch (Exception ex)
                 {
