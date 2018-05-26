@@ -15,7 +15,13 @@ namespace AbstractPizzeria
         [Required]
         public string CustomerFIO { get; set; }
 
+        public string Mail { get; set; }
+
         [ForeignKey("CustomerId")]
         public virtual List<Request> Requests { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public virtual List<MessageInfo> MessageInfos { get; set; }
+
     }
 }

@@ -5,10 +5,9 @@ using System.Data.Entity;
 
 namespace AbstractPizzeriaService
 {
-    [Table("AbstractDatabase")]
     public class AbstractDbContext : DbContext
     {
-        public AbstractDbContext()
+        public AbstractDbContext() : base("AbstractDatabase")
         {
             //настройки конфигурации для entity
             Configuration.ProxyCreationEnabled = false;
@@ -31,6 +30,8 @@ namespace AbstractPizzeriaService
         public virtual DbSet<Resource> Resources { get; set; }
 
         public virtual DbSet<ResourceIngridient> ResourceIngridients { get; set; }
+
+        public virtual DbSet<MessageInfo> MessageInfos { get; set; }
 
         public override int SaveChanges()
         {
