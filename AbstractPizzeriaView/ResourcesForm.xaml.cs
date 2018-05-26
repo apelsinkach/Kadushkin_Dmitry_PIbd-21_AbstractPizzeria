@@ -87,7 +87,7 @@ namespace AbstractPizzeriaView
             {
                 if (MessageBox.Show("Удалить запись", "Вопрос", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    int id = Convert.ToInt32(dataGridView.SelectedValue);
+                    int id = Convert.ToInt32(dataGridView.SelectedIndex + 1);
                     try
                     {
                         service.DelElement(id);
