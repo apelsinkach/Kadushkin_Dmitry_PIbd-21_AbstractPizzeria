@@ -55,6 +55,7 @@ namespace AbstractPizzeriaRestApi
             container.RegisterType<IResourceService, ResourceServiceBD>(new HierarchicalLifetimeManager());
             container.RegisterType<IBasicService, BasicServiceBD>(new HierarchicalLifetimeManager());
             container.RegisterType<IStatementService, StatementServiceBD>(new HierarchicalLifetimeManager());
+            container.RegisterType<IMessageInfoService, MessageInfoServiceBD>(new HierarchicalLifetimeManager());
         }
     }
 }
