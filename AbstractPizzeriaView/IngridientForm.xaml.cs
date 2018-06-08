@@ -4,6 +4,7 @@ using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,8 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -25,19 +25,13 @@ namespace AbstractPizzeriaView
     public partial class IngridientForm : Window
     {
 
-        [Dependency]
-        public IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IIngridientService service;
 
         private int? id;
 
-        public IngridientForm(IIngridientService service)
+        public IngridientForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -49,9 +43,10 @@ namespace AbstractPizzeriaView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new IngridientBindingModel
+                    response = APIClient.PostRequest("api/Ingridient/UpdElement", new IngridientBindingModel
                     {
                         Id = id.Value,
                         IngridientName = textBoxName.Text
@@ -59,14 +54,21 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new IngridientBindingModel
+                    response = APIClient.PostRequest("api/Ingridient/AddElement", new IngridientBindingModel
                     {
                         IngridientName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
@@ -86,10 +88,15 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    IngridientViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Ingridient/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.IngridientName;
+                        var component = APIClient.GetElement<IngridientViewModel>(response);
+                        textBoxName.Text = component.IngridientName;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
