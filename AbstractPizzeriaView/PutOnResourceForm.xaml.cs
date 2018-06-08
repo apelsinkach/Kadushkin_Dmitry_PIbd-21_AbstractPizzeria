@@ -14,8 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -25,21 +24,9 @@ namespace AbstractPizzeriaView
     public partial class PutOnResourceForm : Window
     {
 
-        [Dependency]
-        public IUnityContainer Container { get; set; }
-
-        private readonly IResourceService serviceS;
-
-        private readonly IIngridientService serviceC;
-
-        private readonly IBasicService serviceM;
-
-        public PutOnResourceForm(IResourceService serviceS, IIngridientService serviceC, IBasicService serviceM)
+        public PutOnResourceForm()
         {
             InitializeComponent();
-            this.serviceS = serviceS;
-            this.serviceC = serviceC;
-            this.serviceM = serviceM;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -61,15 +48,22 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                serviceM.PutComponentOnStock(new ResourceIngridientBindingModel
+                var response = APIClient.PostRequest("api/Basic/PutComponentOnStock", new ResourceIngridientBindingModel
                 {
                     IngridientId = Convert.ToInt32(comboBoxIngridient.SelectedValue),
                     ResourceId = Convert.ToInt32(comboBoxResource.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
@@ -87,21 +81,37 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                List<IngridientViewModel> listC = serviceC.GetList();
-                if (listC != null)
+                var responseC = APIClient.GetRequest("api/Ingridient/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxIngridient.DisplayMemberPath = "IngridientName";
-                    comboBoxIngridient.SelectedValuePath = "Id";
-                    comboBoxIngridient.ItemsSource = listC;
-                    comboBoxIngridient.SelectedItem = null;
+                    List<IngridientViewModel> list = APIClient.GetElement<List<IngridientViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxIngridient.DisplayMemberPath = "IngridientName";
+                        comboBoxIngridient.SelectedValuePath = "Id";
+                        comboBoxIngridient.ItemsSource = list;
+                        comboBoxIngridient.SelectedItem = null;
+                    }
                 }
-                List<ResourceViewModel> listS = serviceS.GetList();
-                if (listS != null)
+                else
                 {
-                    comboBoxResource.DisplayMemberPath = "ResourceName";
-                    comboBoxResource.SelectedValuePath = "Id";
-                    comboBoxResource.ItemsSource = listS;
-                    comboBoxResource.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
+                }
+                var responseS = APIClient.GetRequest("api/Resource/GetList");
+                if (responseS.Result.IsSuccessStatusCode)
+                {
+                    List<ResourceViewModel> list = APIClient.GetElement<List<ResourceViewModel>>(responseS);
+                    if (list != null)
+                    {
+                        comboBoxResource.DisplayMemberPath = "ResourceName";
+                        comboBoxResource.SelectedValuePath = "Id";
+                        comboBoxResource.ItemsSource = list;
+                        comboBoxResource.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseC));
                 }
             }
             catch (Exception ex)
