@@ -17,6 +17,11 @@
 
             </MenuItem>
             <MenuItem Header="Пополнить склад" Height="22" Width="135" Click="пополнитьСкладToolStripMenuItem_Click"/>
+            <MenuItem Header="Отчеты" Height="22" Width="105">
+                <MenuItem Header="Прайс изделий" Height="28" Click="прайсИзделийToolStripMenuItem" HorizontalAlignment="Left" Width="211"/>
+                <MenuItem Header="Загруженность складов" Height="24" Click="загруженностьСкладовToolStripMenuItem" Margin="0,0,8,0"/>
+                <MenuItem Header="Заказы клиентов" Height="28" Click="заказыКлиентовToolStripMenuItem" Margin="0,0,30.4,0"/>
+            </MenuItem>
         </Menu>
         <DataGrid x:Name="dataGridView" HorizontalAlignment="Left" Height="272" Margin="0,27,0,0" VerticalAlignment="Top" Width="880" IsReadOnly="True"/>
         <Button x:Name="buttonCreateOrder" Content="Создать заказ" HorizontalAlignment="Left" Margin="909,48,0,0" VerticalAlignment="Top" Width="138" Height="28" Click="buttonCreateOrder_Click"/>
