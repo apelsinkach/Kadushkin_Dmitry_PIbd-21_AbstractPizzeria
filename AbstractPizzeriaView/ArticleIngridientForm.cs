@@ -27,21 +27,17 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                var response = APIClient.GetRequest("api/Ingridient/GetList");
-                if (response.Result.IsSuccessStatusCode)
-                {
-                    comboBoxIngridient.DisplayMember = "IngridientName";
-                    comboBoxIngridient.ValueMember = "Id";
-                    comboBoxIngridient.DataSource = APIClient.GetElement<List<IngridientViewModel>>(response);
-                    comboBoxIngridient.SelectedItem = null;
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                comboBoxIngridient.DisplayMember = "IngridientName";
+                comboBoxIngridient.ValueMember = "Id";
+                comboBoxIngridient.DataSource = Task.Run(() => APIClient.GetRequestData<List<IngridientViewModel>>("api/Ingridient/GetList")).Result;
+                comboBoxIngridient.SelectedItem = null;
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             if (model != null)
