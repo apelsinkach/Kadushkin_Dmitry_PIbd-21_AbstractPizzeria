@@ -26,5 +26,11 @@ namespace AbstractPizzeria
         public DateTime DateCreate { get; set; }
 
         public DateTime? DateImplement { get; set; }
+
+        public virtual Customer Customer { get; set; }
+
+        public virtual Article Article { get; set; }
+
+        public virtual Worker Worker { get; set; }
     }
 }
