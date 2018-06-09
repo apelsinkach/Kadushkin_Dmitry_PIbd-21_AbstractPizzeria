@@ -40,32 +40,42 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                var response = APIClient.PostRequest("api/Basic/PutComponentOnStock", new ResourceIngridientBindingModel
+                int componentId = Convert.ToInt32(comboBoxIngridient.SelectedValue);
+                int stockId = Convert.ToInt32(comboBoxResource.SelectedValue);
+                int count = Convert.ToInt32(textBoxCount.Text);
+                Task task = Task.Run(() => APIClient.PostRequestData("api/Basic/PutComponentOnStock", new ResourceIngridientBindingModel
                 {
-                    IngridientId = Convert.ToInt32(comboBoxIngridient.SelectedValue),
-                    ResourceId = Convert.ToInt32(comboBoxResource.SelectedValue),
-                    Count = Convert.ToInt32(textBoxCount.Text)
-                });
-                if (response.Result.IsSuccessStatusCode)
+                    IngridientId = componentId,
+                    ResourceId = stockId,
+                    Count = count
+                }));
+
+                task.ContinueWith((prevTask) => MessageBox.Show("Склад пополнен", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                    TaskContinuationOptions.OnlyOnRanToCompletion);
+                task.ContinueWith((prevTask) =>
                 {
-                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
-                }
+                    var ex = (Exception)prevTask.Exception;
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }, TaskContinuationOptions.OnlyOnFaulted);
+
+                Close();
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.Cancel;
             Close();
         }
 
@@ -73,41 +83,30 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                var responseC = APIClient.GetRequest("api/Ingridient/GetList");
-                if (responseC.Result.IsSuccessStatusCode)
+                List<IngridientViewModel> listC = Task.Run(() => APIClient.GetRequestData<List<IngridientViewModel>>("api/Ingridient/GetList")).Result;
+                if (listC != null)
                 {
-                    List<IngridientViewModel> list = APIClient.GetElement<List<IngridientViewModel>>(responseC);
-                    if (list != null)
-                    {
-                        comboBoxIngridient.DisplayMember = "IngridientName";
-                        comboBoxIngridient.ValueMember = "Id";
-                        comboBoxIngridient.DataSource = list;
-                        comboBoxIngridient.SelectedItem = null;
-                    }
+                    comboBoxIngridient.DisplayMember = "IngridientName";
+                    comboBoxIngridient.ValueMember = "Id";
+                    comboBoxIngridient.DataSource = listC;
+                    comboBoxIngridient.SelectedItem = null;
                 }
-                else
+
+                List<ResourceViewModel> listS = Task.Run(() => APIClient.GetRequestData<List<ResourceViewModel>>("api/Resource/GetList")).Result;
+                if (listS != null)
                 {
-                    throw new Exception(APIClient.GetError(responseC));
-                }
-                var responseS = APIClient.GetRequest("api/Resource/GetList");
-                if (responseS.Result.IsSuccessStatusCode)
-                {
-                    List<ResourceViewModel> list = APIClient.GetElement<List<ResourceViewModel>>(responseS);
-                    if (list != null)
-                    {
-                        comboBoxResource.DisplayMember = "ResourceName";
-                        comboBoxResource.ValueMember = "Id";
-                        comboBoxResource.DataSource = list;
-                        comboBoxResource.SelectedItem = null;
-                    }
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(responseC));
+                    comboBoxResource.DisplayMember = "ResourceName";
+                    comboBoxResource.ValueMember = "Id";
+                    comboBoxResource.DataSource = listS;
+                    comboBoxResource.SelectedItem = null;
                 }
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
