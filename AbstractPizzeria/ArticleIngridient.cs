@@ -15,5 +15,9 @@ namespace AbstractPizzeria
         public int IngridientId { get; set; }
 
         public int Count { get; set; }
+
+        public virtual Article Article { get; set; }
+
+        public virtual Ingridient Ingridient { get; set; }
     }
 }
