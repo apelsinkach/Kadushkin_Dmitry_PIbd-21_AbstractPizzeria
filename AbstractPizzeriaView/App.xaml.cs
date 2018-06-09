@@ -36,7 +36,7 @@ namespace AbstractPizzeriaView
             currentContainer.RegisterType<IArticleService, ArticleServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IResourceService, ResourceServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IBasicService, BasicServiceBD>(new HierarchicalLifetimeManager());
-
+            currentContainer.RegisterType<IStatementService, StatementServiceBD>(new HierarchicalLifetimeManager());
             return currentContainer;
         }
     }
