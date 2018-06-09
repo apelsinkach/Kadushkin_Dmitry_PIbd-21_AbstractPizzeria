@@ -145,7 +145,7 @@
             this.Controls.Add(this.textBoxCount);
             this.Controls.Add(this.comboBoxArticle);
             this.Name = "CreateRequestForm";
-            this.Text = "CreateRequestForm";
+            this.Text = "Создание заказа";
             this.Load += new System.EventHandler(this.CreateRequestForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

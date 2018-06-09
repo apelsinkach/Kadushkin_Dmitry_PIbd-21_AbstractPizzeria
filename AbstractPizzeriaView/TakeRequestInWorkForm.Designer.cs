@@ -81,7 +81,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboBoxWorker);
             this.Name = "TakeRequestInWorkForm";
-            this.Text = "TakeRequestInWorkForm";
+            this.Text = "Отправить в работу";
             this.Load += new System.EventHandler(this.TakeRequestInWorkForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
