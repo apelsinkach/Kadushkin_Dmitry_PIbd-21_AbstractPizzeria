@@ -1,4 +1,5 @@
-﻿using AbstractPizzeriaService.Interfaces;
+﻿using AbstractPizzeriaService.BindingModels;
+using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -21,11 +22,13 @@ namespace AbstractPizzeriaView
         public new IUnityContainer Container { get; set; }
 
         private readonly IBasicService service;
+        private readonly IStatementService reportService;
 
-        public MainForm(IBasicService service)
+        public MainForm(IBasicService service, IStatementService reportService)
         {
             InitializeComponent();
             this.service = service;
+            this.reportService = reportService;
         }
 
         private void LoadData()
@@ -141,6 +144,41 @@ namespace AbstractPizzeriaView
         private void buttonRef_Click(object sender, EventArgs e)
         {
             LoadData();
+        }
+
+        private void прайсИзделийToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                Filter = "doc|*.doc|docx|*.docx"
+                            };
+                        if (sfd.ShowDialog() == DialogResult.OK)
+                            {
+                                try
+                {
+                    reportService.SaveProductPrice(new StatementBindingModel
+                                        {
+                        FileName = sfd.FileName
+                                            });
+                    MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    }
+                                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    }
+                            }
+            }
+
+        private void загруженностьСкладовToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Container.Resolve<ResourcesLoadForm>();
+            form.ShowDialog();
+        }
+
+        private void заказыКлиентовToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Container.Resolve<CustomerRequestsForm>();
+            form.ShowDialog();
         }
     }
 }
