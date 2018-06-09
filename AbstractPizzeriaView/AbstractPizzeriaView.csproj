@@ -4,12 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C4BB0602-ECDC-40E4-9D83-7968DF121A4C}</ProjectGuid>
+    <ProjectGuid>{0DA86FED-8A43-44D1-A566-D366555A1405}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>AbstractPizzeriaView</RootNamespace>
     <AssemblyName>AbstractPizzeriaView</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -33,204 +35,183 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CommonServiceLocator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\CommonServiceLocator.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ReportViewer.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.ReportViewer.WinForms, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Lab 12\AbstractPizzeria\packages\Microsoft.ReportingServices.ReportViewerControl.Winforms.140.1000.523\lib\net40\Microsoft.ReportViewer.WinForms.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\CommonServiceLocator.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="Unity.Abstractions, Version=3.3.0.0, Culture=neutral, PublicKeyToken=6d32ff45e0ccc69f, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.Abstractions.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Configuration, Version=5.2.1.0, Culture=neutral, PublicKeyToken=6d32ff45e0ccc69f, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.Configuration.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.Container, Version=5.7.2.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.Container.dll</HintPath>
+    <Reference Include="Unity.Container, Version=5.8.6.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.Container.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Interception, Version=5.5.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.Interception.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.Interception.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Interception.Configuration, Version=5.1.4.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.Interception.Configuration.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.Interception.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RegistrationByConvention, Version=2.1.5.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.RegistrationByConvention.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.RegistrationByConvention.dll</HintPath>
     </Reference>
     <Reference Include="Unity.ServiceLocation, Version=2.1.2.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Unity.5.7.2\lib\net46\Unity.ServiceLocation.dll</HintPath>
+      <HintPath>..\packages\Unity.5.8.6\lib\net46\Unity.ServiceLocation.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArticleForm.cs">
-      <SubType>Form</SubType>
+    <Page Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="PutOnResourceForm.xaml.cs">
+      <DependentUpon>PutOnResourceForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArticleForm.Designer.cs">
-      <DependentUpon>ArticleForm.cs</DependentUpon>
+    <Compile Include="ResourceForm.xaml.cs">
+      <DependentUpon>ResourceForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArticleIngridientForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="ResourcesForm.xaml.cs">
+      <DependentUpon>ResourcesForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArticleIngridientForm.Designer.cs">
-      <DependentUpon>ArticleIngridientForm.cs</DependentUpon>
+    <Compile Include="TakeRequestInWork.xaml.cs">
+      <DependentUpon>TakeRequestInWork.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArticlesForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="WorkerForm.xaml.cs">
+      <DependentUpon>WorkerForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArticlesForm.Designer.cs">
-      <DependentUpon>ArticlesForm.cs</DependentUpon>
+    <Compile Include="WorkersForm.xaml.cs">
+      <DependentUpon>WorkersForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CreateRequestForm.cs">
-      <SubType>Form</SubType>
+    <Page Include="ArticleForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ArticleIngridientForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ArticlesForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CreateRequestForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomerForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CustomersForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="IngridientForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="IngridientsForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CreateRequestForm.Designer.cs">
-      <DependentUpon>CreateRequestForm.cs</DependentUpon>
+    <Compile Include="ArticleForm.xaml.cs">
+      <DependentUpon>ArticleForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomerForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="ArticleIngridientForm.xaml.cs">
+      <DependentUpon>ArticleIngridientForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomerForm.Designer.cs">
-      <DependentUpon>CustomerForm.cs</DependentUpon>
+    <Compile Include="ArticlesForm.xaml.cs">
+      <DependentUpon>ArticlesForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomersForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="CreateRequestForm.xaml.cs">
+      <DependentUpon>CreateRequestForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomersForm.Designer.cs">
-      <DependentUpon>CustomersForm.cs</DependentUpon>
+    <Compile Include="CustomerForm.xaml.cs">
+      <DependentUpon>CustomerForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IngridientForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="CustomersForm.xaml.cs">
+      <DependentUpon>CustomersForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IngridientForm.Designer.cs">
-      <DependentUpon>IngridientForm.cs</DependentUpon>
+    <Compile Include="IngridientForm.xaml.cs">
+      <DependentUpon>IngridientForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IngridientsForm.cs">
-      <SubType>Form</SubType>
+    <Compile Include="IngridientsForm.xaml.cs">
+      <DependentUpon>IngridientsForm.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IngridientsForm.Designer.cs">
-      <DependentUpon>IngridientsForm.cs</DependentUpon>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
+    <Page Include="PutOnResourceForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ResourceForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ResourcesForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TakeRequestInWork.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkerForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkersForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PutOnResource.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="PutOnResource.Designer.cs">
-      <DependentUpon>PutOnResource.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ResourceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ResourceForm.Designer.cs">
-      <DependentUpon>ResourceForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ResourcesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ResourcesForm.Designer.cs">
-      <DependentUpon>ResourcesForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="TakeRequestInWorkForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="TakeRequestInWorkForm.Designer.cs">
-      <DependentUpon>TakeRequestInWorkForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="WorkerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WorkerForm.Designer.cs">
-      <DependentUpon>WorkerForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="WorkersForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WorkersForm.Designer.cs">
-      <DependentUpon>WorkersForm.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="ArticleForm.resx">
-      <DependentUpon>ArticleForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ArticleIngridientForm.resx">
-      <DependentUpon>ArticleIngridientForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ArticlesForm.resx">
-      <DependentUpon>ArticlesForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CreateRequestForm.resx">
-      <DependentUpon>CreateRequestForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CustomerForm.resx">
-      <DependentUpon>CustomerForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CustomersForm.resx">
-      <DependentUpon>CustomersForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IngridientForm.resx">
-      <DependentUpon>IngridientForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IngridientsForm.resx">
-      <DependentUpon>IngridientsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="PutOnResource.resx">
-      <DependentUpon>PutOnResource.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ResourceForm.resx">
-      <DependentUpon>ResourceForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ResourcesForm.resx">
-      <DependentUpon>ResourcesForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="TakeRequestInWorkForm.resx">
-      <DependentUpon>TakeRequestInWorkForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkerForm.resx">
-      <DependentUpon>WorkerForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="WorkersForm.resx">
-      <DependentUpon>WorkersForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
