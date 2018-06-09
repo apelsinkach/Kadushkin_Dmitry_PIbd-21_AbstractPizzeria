@@ -1,5 +1,6 @@
 ﻿using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
+using AbstractPizzeriaService.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -14,8 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -24,15 +24,10 @@ namespace AbstractPizzeriaView
     /// </summary>
     public partial class ResourcesLoadForm : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
-        private readonly IStatementService service;
-
-        public ResourcesLoadForm(IStatementService service)
+        public ResourcesLoadForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
 
@@ -46,11 +41,18 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    service.SaveStocksLoad(new StatementBindingModel
+                    var response = APIClient.PostRequest("api/Statement/SaveStocksLoad", new StatementBindingModel
                     {
                         FileName = sfd.FileName
                     });
-                    MessageBox.Show("Выполнено", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -63,10 +65,14 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                var dict = service.GetStocksLoad();
-                if (dict != null)
-                {              
-                    dataGridView.ItemsSource=dict;
+                var response = APIClient.GetRequest("api/Statement/GetStocksLoad");
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    dataGridView.ItemsSource = APIClient.GetElement<List<ResourcesLoadViewModel>>(response);
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)

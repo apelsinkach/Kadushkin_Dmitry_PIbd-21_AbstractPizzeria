@@ -14,8 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -24,22 +23,13 @@ namespace AbstractPizzeriaView
     /// </summary>
     public partial class TakeRequestInWork : Window
     {
-        [Dependency]
-        public IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IWorkerService serviceI;
-
-        private readonly IBasicService serviceM;
 
         private int? id;
 
-        public TakeRequestInWork(IWorkerService serviceI, IBasicService serviceM)
+        public TakeRequestInWork()
         {
             InitializeComponent();
-            this.serviceI = serviceI;
-            this.serviceM = serviceM;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -51,14 +41,21 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                serviceM.TakeOrderInWork(new RequestBindingModel
+                var response = APIClient.PostRequest("api/Basic/TakeOrderInWork", new RequestBindingModel
                 {
                     Id = id.Value,
                     WorkerId = Convert.ToInt32(comboBoxWorker.SelectedValue)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
@@ -82,13 +79,21 @@ namespace AbstractPizzeriaView
                     MessageBox.Show("Не указан заказ", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     Close();
                 }
-                List<WorkerViewModel> listI = serviceI.GetList();
-                if (listI != null)
+                var response = APIClient.GetRequest("api/Implementer/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    comboBoxWorker.DisplayMemberPath = "WorkerFIO";
-                    comboBoxWorker.SelectedValuePath = "Id";
-                    comboBoxWorker.ItemsSource = listI;
-                    comboBoxWorker.SelectedItem = null;
+                    List<WorkerViewModel> list = APIClient.GetElement<List<WorkerViewModel>>(response);
+                    if (list != null)
+                    {
+                        comboBoxWorker.DisplayMemberPath = "WorkerFIO";
+                        comboBoxWorker.SelectedValuePath = "Id";
+                        comboBoxWorker.ItemsSource = list;
+                        comboBoxWorker.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
