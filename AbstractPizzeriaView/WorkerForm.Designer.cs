@@ -80,7 +80,7 @@
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.textBoxFIO);
             this.Name = "WorkerForm";
-            this.Text = "WorkerForm";
+            this.Text = "Работник";
             this.Load += new System.EventHandler(this.WorkerForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

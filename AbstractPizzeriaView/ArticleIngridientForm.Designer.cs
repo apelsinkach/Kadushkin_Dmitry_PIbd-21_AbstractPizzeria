@@ -101,7 +101,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboBoxIngridient);
             this.Name = "ArticleIngridientForm";
-            this.Text = "ArticleIngridientForm";
+            this.Text = "Добавление продукта";
             this.Load += new System.EventHandler(this.ArticleIngridientForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

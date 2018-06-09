@@ -42,7 +42,7 @@ namespace AbstractPizzeriaView
                 List<CustomerViewModel> listC = serviceC.GetList();
                 if (listC != null)
                 {
-                    comboBoxCustomer.DisplayMember = "ClientFIO";
+                    comboBoxCustomer.DisplayMember = "CustomerFIO";
                     comboBoxCustomer.ValueMember = "Id";
                     comboBoxCustomer.DataSource = listC;
                     comboBoxCustomer.SelectedItem = null;
@@ -50,7 +50,7 @@ namespace AbstractPizzeriaView
                 List<ArticleViewModel> listP = serviceP.GetList();
                 if (listP != null)
                 {
-                    comboBoxArticle.DisplayMember = "ProductName";
+                    comboBoxArticle.DisplayMember = "ArticleName";
                     comboBoxArticle.ValueMember = "Id";
                     comboBoxArticle.DataSource = listP;
                     comboBoxArticle.SelectedItem = null;

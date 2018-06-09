@@ -27,6 +27,11 @@ namespace AbstractPizzeriaView
             this.service = service;
         }
 
+        private void IngridientsForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
         private void LoadData()
         {
             try

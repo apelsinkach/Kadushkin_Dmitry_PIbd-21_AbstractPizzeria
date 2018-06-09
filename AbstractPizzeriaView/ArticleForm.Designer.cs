@@ -160,7 +160,7 @@
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.dataGridView);
             this.Name = "ArticleForm";
-            this.Text = "ArticleForm";
+            this.Text = "Продукт";
             this.Load += new System.EventHandler(this.ArticleForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);

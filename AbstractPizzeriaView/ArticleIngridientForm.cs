@@ -38,7 +38,7 @@ namespace AbstractPizzeriaView
                 List<IngridientViewModel> list = service.GetList();
                 if (list != null)
                 {
-                    comboBoxIngridient.DisplayMember = "ComponentName";
+                    comboBoxIngridient.DisplayMember = "IngridientName";
                     comboBoxIngridient.ValueMember = "Id";
                     comboBoxIngridient.DataSource = list;
                     comboBoxIngridient.SelectedItem = null;
