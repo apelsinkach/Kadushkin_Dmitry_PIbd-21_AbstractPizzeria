@@ -4,6 +4,7 @@ using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,8 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -24,20 +24,16 @@ namespace AbstractPizzeriaView
     /// </summary>
     public partial class WorkerForm : Window
     {
-        [Dependency]
-        public IUnityContainer Container { get; set; }
 
         public int Id { set { id = value; } }
 
-        private readonly IWorkerService service;
 
         private int? id;
 
 
-        public WorkerForm(IWorkerService service)
+        public WorkerForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
 
@@ -50,9 +46,10 @@ namespace AbstractPizzeriaView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new WorkerBindingModel
+                    response = APIClient.PostRequest("api/Worker/UpdElement", new WorkerBindingModel
                     {
                         Id = id.Value,
                         WorkerFIO = textBoxFIO.Text
@@ -60,14 +57,21 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new WorkerBindingModel
+                    response = APIClient.PostRequest("api/Worker/AddElement", new WorkerBindingModel
                     {
                         WorkerFIO = textBoxFIO.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
@@ -87,10 +91,15 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    WorkerViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Worker/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxFIO.Text = view.WorkerFIO;
+                        var implementer = APIClient.GetElement<WorkerViewModel>(response);
+                        textBoxFIO.Text = implementer.WorkerFIO;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)

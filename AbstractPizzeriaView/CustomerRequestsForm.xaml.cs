@@ -1,5 +1,6 @@
 ﻿using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
+using AbstractPizzeriaService.ViewModels;
 using Microsoft.Reporting.WinForms;
 using Microsoft.Win32;
 using System;
@@ -15,8 +16,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
@@ -25,15 +24,10 @@ namespace AbstractPizzeriaView
     /// </summary>
     public partial class CustomerRequestsForm : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
-        private readonly IStatementService service;
-
-        public CustomerRequestsForm(IStatementService service)
+        public CustomerRequestsForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void buttonMake_Click(object sender, RoutedEventArgs e)
@@ -45,14 +39,21 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                var dataSource = service.GetClientOrders(new StatementBindingModel
+                var response = APIClient.PostRequest("api/Statement/GetClientOrders", new StatementBindingModel
                 {
                     DateFrom = dateTimePickerFrom.SelectedDate,
                     DateTo = dateTimePickerTo.SelectedDate
                 });
-
-                ReportDataSource source = new ReportDataSource("DataSetRequests", dataSource);
-                reportViewer.LocalReport.DataSources.Add(source);
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    var dataSource = APIClient.GetElement<List<CustomerRequestsModel>>(response);
+                    ReportDataSource source = new ReportDataSource("DataSetOrders", dataSource);
+                    reportViewer.LocalReport.DataSources.Add(source);
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
 
 
                 reportViewer.RefreshReport();
@@ -62,6 +63,7 @@ namespace AbstractPizzeriaView
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {

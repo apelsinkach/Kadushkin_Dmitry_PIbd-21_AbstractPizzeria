@@ -16,8 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -27,32 +26,32 @@ namespace AbstractPizzeriaView
     public partial class MainWindow : Window
     {
 
-        [Dependency]
-        public IUnityContainer Container { get; set; }
-
-        private readonly IBasicService service;
-        private readonly IStatementService reportService;   
-
-        public MainWindow(IBasicService service, IStatementService reportService)
+        public MainWindow()
         {
             InitializeComponent();
-            this.service = service;
-            this.reportService = reportService;
         }
 
         private void LoadData()
         {
             try
             {
-                List<RequestViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Main/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridView.ItemsSource = list;
-                    dataGridView.Columns[0].Visibility = Visibility.Hidden;
-                    dataGridView.Columns[1].Visibility = Visibility.Hidden;
-                    dataGridView.Columns[3].Visibility = Visibility.Hidden;
-                    dataGridView.Columns[5].Visibility = Visibility.Hidden;
-                    dataGridView.Columns[1].Width = DataGridLength.Auto;
+                    List<RequestViewModel> list = APIClient.GetElement<List<RequestViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridView.ItemsSource = list;
+                        dataGridView.Columns[0].Visibility = Visibility.Hidden;
+                        dataGridView.Columns[1].Visibility = Visibility.Hidden;
+                        dataGridView.Columns[3].Visibility = Visibility.Hidden;
+                        dataGridView.Columns[5].Visibility = Visibility.Hidden;
+                        dataGridView.Columns[1].Width = DataGridLength.Auto;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -64,44 +63,44 @@ namespace AbstractPizzeriaView
 
         private void buttonCreateOrder_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<CreateRequestForm>();
+            var form = new CreateRequestForm();
             form.ShowDialog();
             LoadData();
         }
 
         private void клиентыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<CustomersForm>();
+            var form = new CustomersForm();
             form.ShowDialog();
         }
 
         private void компонентыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<IngridientsForm>();
+            var form = new IngridientsForm();
             form.ShowDialog();
         }
 
         private void изделияToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<ArticlesForm>();
+            var form = new ArticlesForm();
             form.ShowDialog();
         }
 
         private void складыToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<ResourcesForm>();
+            var form = new ResourcesForm();
             form.ShowDialog();
         }
 
         private void сотрудникиToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<WorkersForm>();
+            var form = new WorkersForm();
             form.ShowDialog();
         }
 
         private void пополнитьСкладToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<PutOnResourceForm>();
+            var form = new PutOnResourceForm();
             form.ShowDialog();
         }
 
@@ -109,8 +108,10 @@ namespace AbstractPizzeriaView
         {
             if (dataGridView.SelectedItem != null)
             {
-                var form = Container.Resolve<TakeRequestInWork>();
-                form.Id = Convert.ToInt32(dataGridView.SelectedIndex + 1);
+                var form = new TakeRequestInWork
+                {
+                    Id = Convert.ToInt32(dataGridView.SelectedIndex + 1)
+                };
                 form.ShowDialog();
                 LoadData();
             }
@@ -120,11 +121,22 @@ namespace AbstractPizzeriaView
         {
             if (dataGridView.SelectedItem != null)
             {
+
                 int id = Convert.ToInt32(dataGridView.SelectedIndex + 1);
                 try
                 {
-                    service.FinishOrder(id);
-                    LoadData();
+                    var response = APIClient.PostRequest("api/Basic/FinishOrder", new RequestBindingModel
+                    {
+                        Id = id
+                    });
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -140,8 +152,18 @@ namespace AbstractPizzeriaView
                 int id = Convert.ToInt32(dataGridView.SelectedIndex + 1);
                 try
                 {
-                    service.PayOrder(id);
-                    LoadData();
+                    var response = APIClient.PostRequest("api/Basic/.PayOrder", new RequestBindingModel
+                    {
+                        Id = id
+                    });
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -165,11 +187,18 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    reportService.SaveProductPrice(new StatementBindingModel
+                    var response = APIClient.PostRequest("api/Statement/SaveProductPrice", new StatementBindingModel
                     {
                         FileName = sfd.FileName
                     });
-                    MessageBox.Show("Выполнено", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -180,13 +209,13 @@ namespace AbstractPizzeriaView
 
         private void загруженностьСкладовToolStripMenuItem(object sender, RoutedEventArgs e)
         {
-            var form = Container.Resolve<ResourcesLoadForm>();
+            var form = new ResourcesLoadForm();
             form.ShowDialog();
         }
 
         private void заказыКлиентовToolStripMenuItem(object sender, RoutedEventArgs e)
         {
-            var form = Container.Resolve<CustomerRequestsForm>();
+            var form = new CustomerRequestsForm();
             form.ShowDialog();
         }
     }
