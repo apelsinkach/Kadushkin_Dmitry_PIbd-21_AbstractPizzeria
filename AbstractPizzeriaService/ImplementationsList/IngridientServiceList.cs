@@ -1,16 +1,15 @@
 ﻿using AbstractPizzeria;
+using AbstractPizzeriaService;
 using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AbstractPizzeriaService.ImplementationsList
+namespace AbstractShopService.ImplementationsList
 {
-   public class IngridientServiceList : IIngridientService
+    public class IngridientServiceList : IIngridientService
     {
         private ListDataSingleton source;
 
@@ -21,48 +20,38 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public List<IngridientViewModel> GetList()
         {
-            List<IngridientViewModel> result = new List<IngridientViewModel>();
-            for (int i = 0; i < source.Ingridients.Count; ++i)
-            {
-                result.Add(new IngridientViewModel
+            List<IngridientViewModel> result = source.Ingridients
+                .Select(rec => new IngridientViewModel
                 {
-                    Id = source.Ingridients[i].Id,
-                    IngridientName = source.Ingridients[i].IngridientName
-                });
-            }
+                    Id = rec.Id,
+                    IngridientName = rec.IngridientName
+                })
+                .ToList();
             return result;
         }
 
         public IngridientViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Ingridients.Count; ++i)
+            Ingridient element = source.Ingridients.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Ingridients[i].Id == id)
+                return new IngridientViewModel
                 {
-                    return new IngridientViewModel
-                    {
-                        Id = source.Ingridients[i].Id,
-                        IngridientName = source.Ingridients[i].IngridientName
-                    };
-                }
+                    Id = element.Id,
+                    IngridientName = element.IngridientName
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(IngridientBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Ingridients.Count; ++i)
+            Ingridient element = source.Ingridients.FirstOrDefault(rec => rec.IngridientName == model.IngridientName);
+            if (element != null)
             {
-                if (source.Ingridients[i].Id > maxId)
-                {
-                    maxId = source.Ingridients[i].Id;
-                }
-                if (source.Ingridients[i].IngridientName == model.IngridientName)
-                {
-                    throw new Exception("Уже есть компонент с таким названием");
-                }
+                throw new Exception("Уже есть компонент с таким названием");
             }
+            int maxId = source.Ingridients.Count > 0 ? source.Ingridients.Max(rec => rec.Id) : 0;
             source.Ingridients.Add(new Ingridient
             {
                 Id = maxId + 1,
@@ -72,37 +61,31 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public void UpdElement(IngridientBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Ingridients.Count; ++i)
+            Ingridient element = source.Ingridients.FirstOrDefault(rec =>
+                                        rec.IngridientName == model.IngridientName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Ingridients[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Ingridients[i].IngridientName == model.IngridientName &&
-                    source.Ingridients[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть компонент с таким названием");
-                }
+                throw new Exception("Уже есть компонент с таким названием");
             }
-            if (index == -1)
+            element = source.Ingridients.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Ingridients[index].IngridientName = model.IngridientName;
+            element.IngridientName = model.IngridientName;
         }
 
         public void DelElement(int id)
         {
-            for (int i = 0; i < source.Ingridients.Count; ++i)
+            Ingridient element = source.Ingridients.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.Ingridients[i].Id == id)
-                {
-                    source.Ingridients.RemoveAt(i);
-                    return;
-                }
+                source.Ingridients.Remove(element);
             }
-            throw new Exception("Элемент не найден");
+            else
+            {
+                throw new Exception("Элемент не найден");
+            }
         }
     }
 }
