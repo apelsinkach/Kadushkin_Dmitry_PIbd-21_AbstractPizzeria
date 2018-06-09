@@ -1,5 +1,5 @@
 ﻿using AbstractPizzeriaService.ImplementationsList;
-using AbstractShopService.Interfaces;
+using AbstractPizzeriaService.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
