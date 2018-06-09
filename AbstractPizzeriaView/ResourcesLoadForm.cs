@@ -25,28 +25,24 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                var response = APIClient.GetRequest("api/Statement/GetStocksLoad");
-                if (response.Result.IsSuccessStatusCode)
+                dataGridView.Rows.Clear();
+                foreach (var elem in Task.Run(() => APIClient.GetRequestData<List<ResourcesLoadViewModel>>("api/Statement/GetStocksLoad")).Result)
                 {
-                    dataGridView.Rows.Clear();
-                    foreach (var elem in APIClient.GetElement<List<ResourcesLoadViewModel>>(response))
+                    dataGridView.Rows.Add(new object[] { elem.ResourceName, "", "" });
+                    foreach (var listElem in elem.Ingridients)
                     {
-                        dataGridView.Rows.Add(new object[] { elem.ResourceName, "", "" });
-                        foreach (var listElem in elem.Ingridients)
-                        {
-                            dataGridView.Rows.Add(new object[] { "", listElem.Item1, listElem.Item2 });
-                        }
-                        dataGridView.Rows.Add(new object[] { "Итого", "", elem.TotalCount });
-                        dataGridView.Rows.Add(new object[] { });
+                        dataGridView.Rows.Add(new object[] { "", listElem.Item1, listElem.Item2 });
                     }
-                }
-                else
-                {
-                    throw new Exception(APIClient.GetError(response));
+                    dataGridView.Rows.Add(new object[] { "Итого", "", elem.TotalCount });
+                    dataGridView.Rows.Add(new object[] { });
                 }
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -59,25 +55,23 @@ namespace AbstractPizzeriaView
             };
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                try
+                string fileName = sfd.FileName;
+                Task task = Task.Run(() => APIClient.PostRequestData("api/Statement/SaveStocksLoad", new StatementBindingModel
                 {
-                    var response = APIClient.PostRequest("api/Statement/SaveStocksLoad", new StatementBindingModel
-                    {
-                        FileName = sfd.FileName
-                    });
-                    if (response.Result.IsSuccessStatusCode)
-                    {
-                        MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        throw new Exception(APIClient.GetError(response));
-                    }
-                }
-                catch (Exception ex)
+                    FileName = fileName
+                }));
+
+                task.ContinueWith((prevTask) => MessageBox.Show("Выполнено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                    TaskContinuationOptions.OnlyOnRanToCompletion);
+                task.ContinueWith((prevTask) =>
                 {
+                    var ex = (Exception)prevTask.Exception;
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                }, TaskContinuationOptions.OnlyOnFaulted);
             }
         }
     }
