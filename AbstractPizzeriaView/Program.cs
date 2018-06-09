@@ -1,7 +1,7 @@
 ﻿using AbstractPizzeriaService;
 using AbstractPizzeriaService.ImplementationsBD;
+using AbstractPizzeriaService.ImplementationsList;
 using AbstractPizzeriaService.Interfaces;
-using AbstractShopService.ImplementationsList;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
