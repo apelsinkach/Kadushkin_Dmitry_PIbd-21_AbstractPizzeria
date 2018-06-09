@@ -1,16 +1,15 @@
 ﻿using AbstractPizzeria;
+using AbstractPizzeriaService;
 using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AbstractPizzeriaService.ImplementationsList
+namespace AbstractShopService.ImplementationsList
 {
-   public class BasicServiceList : IBasicService
+    public class BasicServiceList : IBasicService
     {
         private ListDataSingleton source;
 
@@ -21,68 +20,32 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public List<RequestViewModel> GetList()
         {
-            List<RequestViewModel> result = new List<RequestViewModel>();
-            for (int i = 0; i < source.Requests.Count; ++i)
-            {
-                string clientFIO = string.Empty;
-                for (int j = 0; j < source.Customers.Count; ++j)
+            List<RequestViewModel> result = source.Requests
+                .Select(rec => new RequestViewModel
                 {
-                    if (source.Customers[j].Id == source.Requests[i].CustomerId)
-                    {
-                        clientFIO = source.Customers[j].CustomerFIO;
-                        break;
-                    }
-                }
-                string productName = string.Empty;
-                for (int j = 0; j < source.Articles.Count; ++j)
-                {
-                    if (source.Articles[j].Id == source.Requests[i].ArticleId)
-                    {
-                        productName = source.Articles[j].ArticleName;
-                        break;
-                    }
-                }
-                string implementerFIO = string.Empty;
-                if (source.Requests[i].WorkerId.HasValue)
-                {
-                    for (int j = 0; j < source.Workers.Count; ++j)
-                    {
-                        if (source.Workers[j].Id == source.Requests[i].WorkerId.Value)
-                        {
-                            implementerFIO = source.Workers[j].WorkerFIO;
-                            break;
-                        }
-                    }
-                }
-                result.Add(new RequestViewModel
-                {
-                    Id = source.Requests[i].Id,
-                    CustomerId = source.Requests[i].CustomerId,
-                    CustomerFIO = clientFIO,
-                    ArticleId = source.Requests[i].ArticleId,
-                    ArticleName = productName,
-                    WorkerId = source.Requests[i].WorkerId,
-                    WorkerName = implementerFIO,
-                    Count = source.Requests[i].Count,
-                    Sum = source.Requests[i].Sum,
-                    DateCreate = source.Requests[i].DateCreate.ToLongDateString(),
-                    DateImplement = source.Requests[i].DateImplement?.ToLongDateString(),
-                    Status = source.Requests[i].Status.ToString()
-                });
-            }
+                    Id = rec.Id,
+                    CustomerId = rec.CustomerId,
+                    ArticleId = rec.ArticleId,
+                    WorkerId = rec.WorkerId,
+                    DateCreate = rec.DateCreate.ToLongDateString(),
+                    DateImplement = rec.DateImplement?.ToLongDateString(),
+                    Status = rec.Status.ToString(),
+                    Count = rec.Count,
+                    Sum = rec.Sum,
+                    CustomerFIO = source.Customers
+                                    .FirstOrDefault(recC => recC.Id == rec.CustomerId)?.CustomerFIO,
+                    ArticleName = source.Articles
+                                    .FirstOrDefault(recP => recP.Id == rec.ArticleId)?.ArticleName,
+                    WorkerName = source.Workers
+                                    .FirstOrDefault(recI => recI.Id == rec.WorkerId)?.WorkerFIO
+                })
+                .ToList();
             return result;
         }
 
         public void CreateOrder(RequestBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Requests.Count; ++i)
-            {
-                if (source.Requests[i].Id > maxId)
-                {
-                    maxId = source.Customers[i].Id;
-                }
-            }
+            int maxId = source.Requests.Count > 0 ? source.Requests.Max(rec => rec.Id) : 0;
             source.Requests.Add(new Request
             {
                 Id = maxId + 1,
@@ -97,135 +60,92 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public void TakeOrderInWork(RequestBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Requests.Count; ++i)
-            {
-                if (source.Requests[i].Id == model.Id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Request element = source.Requests.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
             // смотрим по количеству компонентов на складах
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
+            var productComponents = source.ArticleIngridients.Where(rec => rec.ArticleId == element.ArticleId);
+            foreach (var productComponent in productComponents)
             {
-                if (source.ArticleIngridients[i].ArticleId == source.Requests[index].ArticleId)
+                int countOnStocks = source.ResourceIngridients
+                                            .Where(rec => rec.IngridientId == productComponent.IngridientId)
+                                            .Sum(rec => rec.Count);
+                if (countOnStocks < productComponent.Count * element.Count)
                 {
-                    int countOnStocks = 0;
-                    for (int j = 0; j < source.ResourceIngridients.Count; ++j)
-                    {
-                        if (source.ResourceIngridients[j].IngridientId == source.ArticleIngridients[i].IngridientId)
-                        {
-                            countOnStocks += source.ResourceIngridients[j].Count;
-                        }
-                    }
-                    if (countOnStocks < source.ArticleIngridients[i].Count * source.Requests[index].Count)
-                    {
-                        for (int j = 0; j < source.Ingridients.Count; ++j)
-                        {
-                            if (source.Ingridients[j].Id == source.ArticleIngridients[i].IngridientId)
-                            {
-                                throw new Exception("Не достаточно компонента " + source.Ingridients[j].IngridientName +
-                                    " требуется " + source.ArticleIngridients[i].Count + ", в наличии " + countOnStocks);
-                            }
-                        }
-                    }
+                    var componentName = source.Ingridients
+                                    .FirstOrDefault(rec => rec.Id == productComponent.IngridientId);
+                    throw new Exception("Не достаточно компонента " + componentName?.IngridientName +
+                        " требуется " + productComponent.Count + ", в наличии " + countOnStocks);
                 }
             }
             // списываем
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
+            foreach (var productComponent in productComponents)
             {
-                if (source.ArticleIngridients[i].ArticleId == source.Requests[index].ArticleId)
+                int countOnStocks = productComponent.Count * element.Count;
+                var stockComponents = source.ResourceIngridients
+                                            .Where(rec => rec.IngridientId == productComponent.IngridientId);
+                foreach (var stockComponent in stockComponents)
                 {
-
-                    int countOnStocks = source.ArticleIngridients[i].Count * source.Requests[index].Count;
-                    for (int j = 0; j < source.ResourceIngridients.Count; ++j)
+                    // компонентов на одном слкаде может не хватать
+                    if (stockComponent.Count >= countOnStocks)
                     {
-                        if (source.ResourceIngridients[j].IngridientId == source.ArticleIngridients[i].IngridientId)
-                        {
-                            // компонентов на одном слкаде может не хватать
-                            if (source.ResourceIngridients[j].Count >= countOnStocks)
-                            {
-                                source.ResourceIngridients[j].Count -= countOnStocks;
-                                break;
-                            }
-                            else
-                            {
-                                countOnStocks -= source.ResourceIngridients[j].Count;
-                                source.ResourceIngridients[j].Count = 0;
-                            }
-                        }
+                        stockComponent.Count -= countOnStocks;
+                        break;
+                    }
+                    else
+                    {
+                        countOnStocks -= stockComponent.Count;
+                        stockComponent.Count = 0;
                     }
                 }
             }
-            source.Requests[index].WorkerId = model.WorkerId;
-            source.Requests[index].DateImplement = DateTime.Now;
-            source.Requests[index].Status = RequestStatus.Выполняется;
+            element.WorkerId = model.WorkerId;
+            element.DateImplement = DateTime.Now;
+            element.Status = RequestStatus.Выполняется;
         }
 
         public void FinishOrder(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Requests.Count; ++i)
-            {
-                if (source.Customers[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Request element = source.Requests.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Requests[index].Status = RequestStatus.Готов;
+            element.Status = RequestStatus.Готов;
         }
 
         public void PayOrder(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Requests.Count; ++i)
-            {
-                if (source.Customers[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Request element = source.Requests.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Requests[index].Status = RequestStatus.Оплачен;
+            element.Status = RequestStatus.Оплачен;
         }
 
         public void PutComponentOnStock(ResourceIngridientBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.ResourceIngridients.Count; ++i)
+            ResourceIngridient element = source.ResourceIngridients
+                                                .FirstOrDefault(rec => rec.ResourceId == model.ResourceId &&
+                                                                    rec.IngridientId == model.IngridientId);
+            if (element != null)
             {
-                if (source.ResourceIngridients[i].ResourceId == model.ResourceId &&
-                    source.ResourceIngridients[i].IngridientId == model.IngridientId)
-                {
-                    source.ResourceIngridients[i].Count += model.Count;
-                    return;
-                }
-                if (source.ResourceIngridients[i].Id > maxId)
-                {
-                    maxId = source.ResourceIngridients[i].Id;
-                }
+                element.Count += model.Count;
             }
-            source.ResourceIngridients.Add(new ResourceIngridient
+            else
             {
-                Id = ++maxId,
-                ResourceId = model.ResourceId,
-                IngridientId = model.IngridientId,
-                Count = model.Count
-            });
+                int maxId = source.ResourceIngridients.Count > 0 ? source.ResourceIngridients.Max(rec => rec.Id) : 0;
+                source.ResourceIngridients.Add(new ResourceIngridient
+                {
+                    Id = ++maxId,
+                    ResourceId = model.ResourceId,
+                    IngridientId = model.IngridientId,
+                    Count = model.Count
+                });
+            }
         }
     }
 }
