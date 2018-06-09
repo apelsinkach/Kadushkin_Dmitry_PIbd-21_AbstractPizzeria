@@ -7,30 +7,23 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
     public partial class IngridientForm : Form
     {
-
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IIngridientService service;
 
         private int? id;
 
-        public IngridientForm(IIngridientService service)
+        public IngridientForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void IngridientForm_Load(object sender, EventArgs e)
@@ -39,10 +32,15 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    IngridientViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Ingridient/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.IngridientName;
+                        var component = APIClient.GetElement<IngridientViewModel>(response);
+                        textBoxName.Text = component.IngridientName;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -61,9 +59,10 @@ namespace AbstractPizzeriaView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new IngridientBindingModel
+                    response = APIClient.PostRequest("api/Ingridient/UpdElement", new IngridientBindingModel
                     {
                         Id = id.Value,
                         IngridientName = textBoxName.Text
@@ -71,14 +70,21 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new IngridientBindingModel
+                    response = APIClient.PostRequest("api/Ingridient/AddElement", new IngridientBindingModel
                     {
                         IngridientName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

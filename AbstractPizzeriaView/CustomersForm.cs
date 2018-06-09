@@ -1,4 +1,4 @@
-﻿using AbstractPizzeriaService.Interfaces;
+﻿using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -9,24 +9,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
     public partial class CustomersForm : Form
     {
-        public CustomersForm(ICustomerService service)
+        public CustomersForm()
         {
             InitializeComponent();
-            this.service = service;
         }
-
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly ICustomerService service;
-
 
         private void CustomersForm_Load(object sender, EventArgs e)
         {
@@ -37,14 +29,23 @@ namespace AbstractPizzeriaView
 
         private void LoadData()
         {
+
             try
             {
-                List<CustomerViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Customer/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridView.DataSource = list;
-                    dataGridView.Columns[0].Visible = false;
-                    dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    List<CustomerViewModel> list = APIClient.GetElement<List<CustomerViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridView.DataSource = list;
+                        dataGridView.Columns[0].Visible = false;
+                        dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -55,16 +56,12 @@ namespace AbstractPizzeriaView
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<CustomerForm>();
+            var form = new CustomerForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
                 LoadData();
             }
         }
-
-      
-
-      
 
 
         private void buttonDel_Click(object sender, EventArgs e)
@@ -76,7 +73,11 @@ namespace AbstractPizzeriaView
                     int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                     try
                     {
-                        service.DelElement(id);
+                        var response = APIClient.PostRequest("api/Customer/DelElement", new CustomerBindingModel { Id = id });
+                        if (!response.Result.IsSuccessStatusCode)
+                        {
+                            throw new Exception(APIClient.GetError(response));
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -95,7 +96,7 @@ namespace AbstractPizzeriaView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<CustomerForm>();
+                var form = new CustomerForm();
                 form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 if (form.ShowDialog() == DialogResult.OK)
                 {

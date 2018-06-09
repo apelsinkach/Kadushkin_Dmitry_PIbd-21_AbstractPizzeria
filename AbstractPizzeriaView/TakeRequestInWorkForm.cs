@@ -10,30 +10,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class TakeRequestInWorkForm : Form
     {
-
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IWorkerService serviceI;
-
-        private readonly IBasicService serviceM;
 
         private int? id;
 
-        public TakeRequestInWorkForm(IWorkerService serviceI, IBasicService serviceM)
+        public TakeRequestInWorkForm()
         {
             InitializeComponent();
-            this.serviceI = serviceI;
-            this.serviceM = serviceM;
         }
 
         private void TakeRequestInWorkForm_Load(object sender, EventArgs e)
@@ -45,13 +33,21 @@ namespace AbstractPizzeriaView
                     MessageBox.Show("Не указан заказ", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Close();
                 }
-                List<WorkerViewModel> listI = serviceI.GetList();
-                if (listI != null)
+                var response = APIClient.GetRequest("api/Worker/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    comboBoxWorker.DisplayMember = "WorkerFIO";
-                    comboBoxWorker.ValueMember = "Id";
-                    comboBoxWorker.DataSource = listI;
-                    comboBoxWorker.SelectedItem = null;
+                    List<WorkerViewModel> list = APIClient.GetElement<List<WorkerViewModel>>(response);
+                    if (list != null)
+                    {
+                        comboBoxWorker.DisplayMember = "ImplementerFIO";
+                        comboBoxWorker.ValueMember = "Id";
+                        comboBoxWorker.DataSource = list;
+                        comboBoxWorker.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -69,14 +65,21 @@ namespace AbstractPizzeriaView
             }
             try
             {
-                serviceM.TakeOrderInWork(new RequestBindingModel
+                var response = APIClient.PostRequest("api/Basic/TakeOrderInWork", new RequestBindingModel
                 {
                     Id = id.Value,
                     WorkerId = Convert.ToInt32(comboBoxWorker.SelectedValue)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
