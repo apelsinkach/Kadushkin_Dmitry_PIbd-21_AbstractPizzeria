@@ -80,11 +80,6 @@ namespace AbstractPizzeriaView
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void textBoxCount_TextChanged(object sender, EventArgs e)
         {
             CalcSum();
