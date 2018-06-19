@@ -13,8 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 
 namespace AbstractPizzeriaView
 {
@@ -23,19 +22,14 @@ namespace AbstractPizzeriaView
     /// </summary>
     public partial class ArticleIngridientForm : Window
     {
-        [Dependency]
-        public IUnityContainer Container { get; set; }
 
         public ArticleIngridientViewModel Model { set { model = value; } get { return model; } }
 
-        private readonly IIngridientService service;
-
         private ArticleIngridientViewModel model;
 
-        public ArticleIngridientForm(IIngridientService service)
+        public ArticleIngridientForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
@@ -85,13 +79,17 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                List<IngridientViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Ingridient/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
                     comboBoxIngridient.DisplayMemberPath = "IngridientName";
                     comboBoxIngridient.SelectedValuePath = "Id";
-                    comboBoxIngridient.ItemsSource = list;
+                    comboBoxIngridient.ItemsSource = APIClient.GetElement<List<IngridientViewModel>>(response);
                     comboBoxIngridient.SelectedItem = null;
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -101,7 +99,7 @@ namespace AbstractPizzeriaView
             if (model != null)
             {
                 comboBoxIngridient.IsEnabled = false;
-                comboBoxIngridient.SelectedValue = model.IngridientId;          
+                comboBoxIngridient.SelectedValue = model.IngridientId;
                 textBoxCount.Text = model.Count.ToString();
             }
         }
