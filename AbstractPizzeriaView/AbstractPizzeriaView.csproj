@@ -139,6 +139,13 @@
     <Compile Include="IngridientsForm.Designer.cs">
       <DependentUpon>IngridientsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MailClient.cs" />
+    <Compile Include="MailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MailsForm.Designer.cs">
+      <DependentUpon>MailsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -216,6 +223,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="IngridientsForm.resx">
       <DependentUpon>IngridientsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MailsForm.resx">
+      <DependentUpon>MailsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
