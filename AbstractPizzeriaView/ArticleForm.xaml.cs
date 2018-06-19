@@ -11,11 +11,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Unity;
-using Unity.Attributes;
+
 using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
+using System.Net.Http;
 
 namespace AbstractPizzeriaView
 {
@@ -25,26 +25,21 @@ namespace AbstractPizzeriaView
     public partial class ArticleForm : Window
     {
 
-        [Dependency]
-        public IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
 
-        private readonly IArticleService service;
 
         private int? id;
 
         private List<ArticleIngridientViewModel> productComponents;
 
 
-        public ArticleForm(IArticleService service)
+        public ArticleForm()
         {
             InitializeComponent();
-            this.service = service;
         }
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<ArticleIngridientForm>();
+            var form = new ArticleIngridientForm();
             if (form.ShowDialog() == true)
             {
                 if (form.Model != null)
@@ -63,7 +58,7 @@ namespace AbstractPizzeriaView
         {
             if (dataGridView.SelectedItem != null)
             {
-                var form = Container.Resolve<ArticleIngridientForm>();
+                var form = new ArticleIngridientForm();
                 form.Model = productComponents[dataGridView.SelectedIndex];
                 if (form.ShowDialog() == true)
                 {
@@ -148,9 +143,10 @@ namespace AbstractPizzeriaView
                         Count = productComponents[i].Count
                     });
                 }
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new ArticleBindingModel
+                    response = APIClient.PostRequest("api/Article/UpdElement", new ArticleBindingModel
                     {
                         Id = id.Value,
                         ArticleName = textBoxName.Text,
@@ -160,16 +156,23 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new ArticleBindingModel
+                    response = APIClient.PostRequest("api/Article/AddElement", new ArticleBindingModel
                     {
                         ArticleName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
                         ArticleIngridients = productComponentBM
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
@@ -189,13 +192,18 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    ArticleViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Article/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.ArticleName;
-                        textBoxPrice.Text = view.Price.ToString();
-                        productComponents = view.ArticleIngridients;
+                        var product = APIClient.GetElement<ArticleViewModel>(response);
+                        textBoxName.Text = product.ArticleName;
+                        textBoxPrice.Text = product.Price.ToString();
+                        productComponents = product.ArticleIngridients;
                         LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)

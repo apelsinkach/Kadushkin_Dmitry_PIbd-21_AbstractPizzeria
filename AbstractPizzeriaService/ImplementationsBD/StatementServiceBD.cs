@@ -1,19 +1,16 @@
 ﻿using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Interop.Word;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.Entity;
 using System.Data.Entity.SqlServer;
-using System.util;
-using iTextSharp.text.pdf;
-using iTextSharp.text;
+using System.IO;
+using System.Linq;
 
 namespace AbstractPizzeriaService.ImplementationsBD
 {
@@ -133,7 +130,7 @@ namespace AbstractPizzeriaService.ImplementationsBD
             {
                 ResourceName = stock.ResourceName,
                 TotalCount = stockCompList.Sum(r => r.Count),
-                Ingridients = stockCompList.Select(r => new Tuple<string, int>(r.Ingridient.IngridientName, r.Count))
+                Ingridients = stockCompList.Select(r => new ResourcesIngridientLoadViewModel { IngridientName = r.Ingridient.IngridientName, Count = r.Count }).ToList()
             })
                             .ToList();
         }
@@ -220,9 +217,9 @@ namespace AbstractPizzeriaService.ImplementationsBD
 
                             foreach (var listElem in elem.Ingridients)
                             {
-                                excelcells.Value2 = listElem.Item1;
+                                excelcells.Value2 = listElem.IngridientName;
                                 excelcells.ColumnWidth = 10;
-                                excelcells.get_Offset(0, 1).Value2 = listElem.Item2;
+                                excelcells.get_Offset(0, 1).Value2 = listElem.Count;
                                 excelcells = excelcells.get_Offset(1, 0);
                             }
                         }
