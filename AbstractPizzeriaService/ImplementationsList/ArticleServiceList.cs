@@ -1,16 +1,15 @@
 ﻿using AbstractPizzeria;
+using AbstractPizzeriaService;
 using AbstractPizzeriaService.BindingModels;
 using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AbstractPizzeriaService.ImplementationsList
+namespace AbstractShopService.ImplementationsList
 {
-   public class ArticleServiceList : IArticleService
+    public class ArticleServiceList : IArticleService
     {
         private ListDataSingleton source;
 
@@ -21,103 +20,64 @@ namespace AbstractPizzeriaService.ImplementationsList
 
         public List<ArticleViewModel> GetList()
         {
-            List<ArticleViewModel> result = new List<ArticleViewModel>();
-            for (int i = 0; i < source.Articles.Count; ++i)
-            {
-                // требуется дополнительно получить список компонентов для изделия и их количество
-                List<ArticleIngridientViewModel> productComponents = new List<ArticleIngridientViewModel>();
-                for (int j = 0; j < source.ArticleIngridients.Count; ++j)
+            List<ArticleViewModel> result = source.Articles
+                .Select(rec => new ArticleViewModel
                 {
-                    if (source.ArticleIngridients[j].ArticleId == source.Articles[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Ingridients.Count; ++k)
-                        {
-                            if (source.ArticleIngridients[j].IngridientId == source.Ingridients[k].Id)
+                    Id = rec.Id,
+                    ArticleName = rec.ArticleName,
+                    Price = rec.Price,
+                    ArticleIngridients = source.ArticleIngridients
+                            .Where(recPC => recPC.ArticleId == rec.Id)
+                            .Select(recPC => new ArticleIngridientViewModel
                             {
-                                componentName = source.Ingridients[k].IngridientName;
-                                break;
-                            }
-                        }
-                        productComponents.Add(new ArticleIngridientViewModel
-                        {
-                            Id = source.ArticleIngridients[j].Id,
-                            ArticleId = source.ArticleIngridients[j].ArticleId,
-                            IngridientId = source.ArticleIngridients[j].IngridientId,
-                            IngridientName = componentName,
-                            Count = source.ArticleIngridients[j].Count
-                        });
-                    }
-                }
-                result.Add(new ArticleViewModel
-                {
-                    Id = source.Articles[i].Id,
-                    ArticleName = source.Articles[i].ArticleName,
-                    Price = source.Articles[i].Price,
-                    ArticleIngridients = productComponents
-                });
-            }
+                                Id = recPC.Id,
+                                ArticleId = recPC.ArticleId,
+                                IngridientId = recPC.IngridientId,
+                                IngridientName = source.Ingridients
+                                    .FirstOrDefault(recC => recC.Id == recPC.IngridientId)?.IngridientName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public ArticleViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Articles.Count; ++i)
+            Article element = source.Articles.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                // требуется дополнительно получить список компонентов для изделия и их количество
-                List<ArticleIngridientViewModel> productComponents = new List<ArticleIngridientViewModel>();
-                for (int j = 0; j < source.ArticleIngridients.Count; ++j)
+                return new ArticleViewModel
                 {
-                    if (source.ArticleIngridients[j].ArticleId == source.Articles[i].Id)
-                    {
-                        string componentName = string.Empty;
-                        for (int k = 0; k < source.Ingridients.Count; ++k)
-                        {
-                            if (source.ArticleIngridients[j].IngridientId == source.Ingridients[k].Id)
+                    Id = element.Id,
+                    ArticleName = element.ArticleName,
+                    Price = element.Price,
+                    ArticleIngridients = source.ArticleIngridients
+                            .Where(recPC => recPC.ArticleId == element.Id)
+                            .Select(recPC => new ArticleIngridientViewModel
                             {
-                                componentName = source.Ingridients[k].IngridientName;
-                                break;
-                            }
-                        }
-                        productComponents.Add(new ArticleIngridientViewModel
-                        {
-                            Id = source.ArticleIngridients[j].Id,
-                            ArticleId = source.ArticleIngridients[j].ArticleId,
-                            IngridientId = source.ArticleIngridients[j].IngridientId,
-                            IngridientName = componentName,
-                            Count = source.ArticleIngridients[j].Count
-                        });
-                    }
-                }
-                if (source.Articles[i].Id == id)
-                {
-                    return new ArticleViewModel
-                    {
-                        Id = source.Articles[i].Id,
-                        ArticleName = source.Articles[i].ArticleName,
-                        Price = source.Articles[i].Price,
-                        ArticleIngridients = productComponents
-                    };
-                }
+                                Id = recPC.Id,
+                                ArticleId = recPC.ArticleId,
+                                IngridientId = recPC.IngridientId,
+                                IngridientName = source.Ingridients
+                                        .FirstOrDefault(recC => recC.Id == recPC.IngridientId)?.IngridientName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
-
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(ArticleBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Articles.Count; ++i)
+            Article element = source.Articles.FirstOrDefault(rec => rec.ArticleName == model.ArticleName);
+            if (element != null)
             {
-                if (source.Articles[i].Id > maxId)
-                {
-                    maxId = source.Articles[i].Id;
-                }
-                if (source.Articles[i].ArticleName == model.ArticleName)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть изделие с таким названием");
             }
+            int maxId = source.Articles.Count > 0 ? source.Articles.Max(rec => rec.Id) : 0;
             source.Articles.Add(new Article
             {
                 Id = maxId + 1,
@@ -125,143 +85,102 @@ namespace AbstractPizzeriaService.ImplementationsList
                 Price = model.Price
             });
             // компоненты для изделия
-            int maxPCId = 0;
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
-            {
-                if (source.ArticleIngridients[i].Id > maxPCId)
-                {
-                    maxPCId = source.ArticleIngridients[i].Id;
-                }
-            }
+            int maxPCId = source.ArticleIngridients.Count > 0 ?
+                                    source.ArticleIngridients.Max(rec => rec.Id) : 0;
             // убираем дубли по компонентам
-            for (int i = 0; i < model.ArticleIngridients.Count; ++i)
-            {
-                for (int j = 1; j < model.ArticleIngridients.Count; ++j)
-                {
-                    if (model.ArticleIngridients[i].IngridientId ==
-                        model.ArticleIngridients[j].IngridientId)
-                    {
-                        model.ArticleIngridients[i].Count +=
-                            model.ArticleIngridients[j].Count;
-                        model.ArticleIngridients.RemoveAt(j--);
-                    }
-                }
-            }
+            var groupComponents = model.ArticleIngridients
+                                        .GroupBy(rec => rec.IngridientId)
+                                        .Select(rec => new
+                                        {
+                                            IngridientId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
             // добавляем компоненты
-            for (int i = 0; i < model.ArticleIngridients.Count; ++i)
+            foreach (var groupComponent in groupComponents)
             {
                 source.ArticleIngridients.Add(new ArticleIngridient
                 {
                     Id = ++maxPCId,
                     ArticleId = maxId + 1,
-                    IngridientId = model.ArticleIngridients[i].IngridientId,
-                    Count = model.ArticleIngridients[i].Count
+                    IngridientId = groupComponent.IngridientId,
+                    Count = groupComponent.Count
                 });
             }
         }
 
         public void UpdElement(ArticleBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Articles.Count; ++i)
+            Article element = source.Articles.FirstOrDefault(rec =>
+                                        rec.ArticleName == model.ArticleName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Articles[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Articles[i].ArticleName == model.ArticleName &&
-                    source.Articles[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть изделие с таким названием");
             }
-            if (index == -1)
+            element = source.Articles.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Articles[index].ArticleName = model.ArticleName;
-            source.Articles[index].Price = model.Price;
-            int maxPCId = 0;
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
-            {
-                if (source.ArticleIngridients[i].Id > maxPCId)
-                {
-                    maxPCId = source.ArticleIngridients[i].Id;
-                }
-            }
+            element.ArticleName = model.ArticleName;
+            element.Price = model.Price;
+
+            int maxPCId = source.ArticleIngridients.Count > 0 ? source.ArticleIngridients.Max(rec => rec.Id) : 0;
             // обновляем существуюущие компоненты
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
+            var compIds = model.ArticleIngridients.Select(rec => rec.IngridientId).Distinct();
+            var updateComponents = source.ArticleIngridients
+                                            .Where(rec => rec.ArticleId == model.Id &&
+                                           compIds.Contains(rec.IngridientId));
+            foreach (var updateComponent in updateComponents)
             {
-                if (source.ArticleIngridients[i].ArticleId == model.Id)
-                {
-                    bool flag = true;
-                    for (int j = 0; j < model.ArticleIngridients.Count; ++j)
-                    {
-                        // если встретили, то изменяем количество
-                        if (source.ArticleIngridients[i].Id == model.ArticleIngridients[j].Id)
-                        {
-                            source.ArticleIngridients[i].Count = model.ArticleIngridients[j].Count;
-                            flag = false;
-                            break;
-                        }
-                    }
-                    // если не встретили, то удаляем
-                    if (flag)
-                    {
-                        source.ArticleIngridients.RemoveAt(i--);
-                    }
-                }
+                updateComponent.Count = model.ArticleIngridients
+                                                .FirstOrDefault(rec => rec.Id == updateComponent.Id).Count;
             }
+            source.ArticleIngridients.RemoveAll(rec => rec.ArticleId == model.Id &&
+                                       !compIds.Contains(rec.IngridientId));
             // новые записи
-            for (int i = 0; i < model.ArticleIngridients.Count; ++i)
+            var groupComponents = model.ArticleIngridients
+                                        .Where(rec => rec.Id == 0)
+                                        .GroupBy(rec => rec.IngridientId)
+                                        .Select(rec => new
+                                        {
+                                            IngridientId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
+            foreach (var groupComponent in groupComponents)
             {
-                if (model.ArticleIngridients[i].Id == 0)
+                ArticleIngridient elementPC = source.ArticleIngridients
+                                        .FirstOrDefault(rec => rec.ArticleId == model.Id &&
+                                                        rec.IngridientId == groupComponent.IngridientId);
+                if (elementPC != null)
                 {
-                    // ищем дубли
-                    for (int j = 0; j < source.ArticleIngridients.Count; ++j)
+                    elementPC.Count += groupComponent.Count;
+                }
+                else
+                {
+                    source.ArticleIngridients.Add(new ArticleIngridient
                     {
-                        if (source.ArticleIngridients[j].ArticleId == model.Id &&
-                            source.ArticleIngridients[j].IngridientId == model.ArticleIngridients[i].IngridientId)
-                        {
-                            source.ArticleIngridients[j].Count += model.ArticleIngridients[i].Count;
-                            model.ArticleIngridients[i].Id = source.ArticleIngridients[j].Id;
-                            break;
-                        }
-                    }
-                    // если не нашли дубли, то новая запись
-                    if (model.ArticleIngridients[i].Id == 0)
-                    {
-                        source.ArticleIngridients.Add(new ArticleIngridient
-                        {
-                            Id = ++maxPCId,
-                            ArticleId = model.Id,
-                            IngridientId = model.ArticleIngridients[i].IngridientId,
-                            Count = model.ArticleIngridients[i].Count
-                        });
-                    }
+                        Id = ++maxPCId,
+                        ArticleId = model.Id,
+                        IngridientId = groupComponent.IngridientId,
+                        Count = groupComponent.Count
+                    });
                 }
             }
         }
 
         public void DelElement(int id)
         {
-            // удаяем записи по компонентам при удалении изделия
-            for (int i = 0; i < source.ArticleIngridients.Count; ++i)
+            Article element = source.Articles.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.ArticleIngridients[i].ArticleId == id)
-                {
-                    source.ArticleIngridients.RemoveAt(i--);
-                }
+                // удаяем записи по компонентам при удалении изделия
+                source.ArticleIngridients.RemoveAll(rec => rec.ArticleId == id);
+                source.Articles.Remove(element);
             }
-            for (int i = 0; i < source.Articles.Count; ++i)
+            else
             {
-                if (source.Articles[i].Id == id)
-                {
-                    source.Articles.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
     }
 }
