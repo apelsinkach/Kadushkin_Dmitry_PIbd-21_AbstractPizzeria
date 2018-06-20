@@ -1,4 +1,5 @@
-﻿using AbstractPizzeriaService.Interfaces;
+﻿using AbstractPizzeriaService.BindingModels;
+using AbstractPizzeriaService.Interfaces;
 using AbstractPizzeriaService.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -9,23 +10,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class ResourcesForm : Form
     {
 
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IResourceService service;
-
-        public ResourcesForm(IResourceService service)
+        public ResourcesForm()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void ResourcesForm_Load(object sender, EventArgs e)
@@ -37,12 +30,20 @@ namespace AbstractPizzeriaView
         {
             try
             {
-                List<ResourceViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Resource/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridView.DataSource = list;
-                    dataGridView.Columns[0].Visible = false;
-                    dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    List<ResourceViewModel> list = APIClient.GetElement<List<ResourceViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridView.DataSource = list;
+                        dataGridView.Columns[0].Visible = false;
+                        dataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -53,7 +54,7 @@ namespace AbstractPizzeriaView
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<ResourceForm>();
+            var form = new ResourceForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
                 LoadData();
@@ -62,14 +63,14 @@ namespace AbstractPizzeriaView
 
         private void buttonRef_Click(object sender, EventArgs e)
         {
-             LoadData();
+            LoadData();
         }
 
         private void buttonUpd_Click(object sender, EventArgs e)
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<ResourceForm>();
+                var form = new ResourceForm();
                 form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                 if (form.ShowDialog() == DialogResult.OK)
                 {
@@ -87,7 +88,11 @@ namespace AbstractPizzeriaView
                     int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
                     try
                     {
-                        service.DelElement(id);
+                        var response = APIClient.PostRequest("api/Resource/DelElement", new CustomerBindingModel { Id = id });
+                        if (!response.Result.IsSuccessStatusCode)
+                        {
+                            throw new Exception(APIClient.GetError(response));
+                        }
                     }
                     catch (Exception ex)
                     {

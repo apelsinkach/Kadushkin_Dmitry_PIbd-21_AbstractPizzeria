@@ -7,37 +7,30 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractPizzeriaView
 {
     public partial class ArticleForm : Form
     {
 
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IArticleService service;
 
         private int? id;
 
         private List<ArticleIngridientViewModel> productComponents;
 
 
-        public ArticleForm(IArticleService service)
+        public ArticleForm()
         {
             InitializeComponent();
-            this.service = service;
         }
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<ArticleIngridientForm>();
+            var form = new ArticleIngridientForm();
             if (form.ShowDialog() == DialogResult.OK)
             {
                 if (form.Model != null)
@@ -56,7 +49,7 @@ namespace AbstractPizzeriaView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<ArticleIngridientForm>();
+                var form = new ArticleIngridientForm();
                 form.Model = productComponents[dataGridView.SelectedRows[0].Cells[0].RowIndex];
                 if (form.ShowDialog() == DialogResult.OK)
                 {
@@ -67,8 +60,7 @@ namespace AbstractPizzeriaView
         }
 
         private void buttonDel_Click(object sender, EventArgs e)
-        {
-            if (dataGridView.SelectedRows.Count == 1)
+        { if (dataGridView.SelectedRows.Count == 1)
             {
                 if (MessageBox.Show("Удалить запись", "Вопрос", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
@@ -117,13 +109,18 @@ namespace AbstractPizzeriaView
             {
                 try
                 {
-                    ArticleViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Article/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.ArticleName;
-                        textBoxPrice.Text = view.Price.ToString();
-                        productComponents = view.ArticleIngridients;
+                        var product = APIClient.GetElement<ArticleViewModel>(response);
+                        textBoxName.Text = product.ArticleName;
+                        textBoxPrice.Text = product.Price.ToString();
+                        productComponents = product.ArticleIngridients;
                         LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -167,9 +164,10 @@ namespace AbstractPizzeriaView
                         Count = productComponents[i].Count
                     });
                 }
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new ArticleBindingModel
+                    response = APIClient.PostRequest("api/Article/UpdElement", new ArticleBindingModel
                     {
                         Id = id.Value,
                         ArticleName = textBoxName.Text,
@@ -179,16 +177,23 @@ namespace AbstractPizzeriaView
                 }
                 else
                 {
-                    service.AddElement(new ArticleBindingModel
+                    response = APIClient.PostRequest("api/Article/AddElement", new ArticleBindingModel
                     {
                         ArticleName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
                         ArticleIngridients = productComponentBM
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

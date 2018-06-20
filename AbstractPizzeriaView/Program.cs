@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Lifetime;
+
 
 namespace AbstractPizzeriaView
 {
@@ -20,26 +19,13 @@ namespace AbstractPizzeriaView
         [STAThread]
         static void Main()
         {
-            var container = BuildUnityContainer();
 
+            APIClient.Connect();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(container.Resolve<MainForm>());
+            Application.Run(new MainForm());
         }
 
-        public static IUnityContainer BuildUnityContainer()
-        {
-            var currentContainer = new UnityContainer();
-            currentContainer.RegisterType<ICustomerService, CustomerServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IIngridientService, IngridientServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IWorkerService, WorkerServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IArticleService, ArticleServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IResourceService, ResourceServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IBasicService, BasicServiceBD>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IStatementService, StatementServiceBD>(new HierarchicalLifetimeManager());
-            return currentContainer;
-        }
-
-
+      
     }
 }
